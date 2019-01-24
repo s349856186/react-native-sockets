@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutionException;
  * Created by David Stoneham on 2017-08-03.
  */
 public class SocketsModule extends ReactContextBaseJavaModule {
-    private final String eTag = "REACT-NATIVE-SOCKETS";
+    private final String eTag = "NATIVE-SOCKETS";
 
     private ReactContext mReactContext;
 
@@ -69,9 +69,9 @@ public class SocketsModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void write(String message) {
+    public void write(String message, int cmd) {
         if (client != null) {
-            client.write(message);
+            client.write(message, cmd);
         }
     }
 
@@ -84,9 +84,16 @@ public class SocketsModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void emit(String message, int clientAddr) {
+    public void emit(String message, int clientAddr, int cmd) {
         if (server != null) {
-            server.write(message, clientAddr);
+            server.write(message, clientAddr, cmd);
+        }
+    }
+
+    @ReactMethod
+    public void clientSent(String message, int cmd) {
+        if (client != null) {
+            client.write(message, cmd);
         }
     }
 
@@ -121,7 +128,7 @@ public class SocketsModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-     public void isServerAvailable(String host, int port, int timeOut, Callback successCallback, Callback errorCallback) {
+    public void isServerAvailable(String host, int port, int timeOut, Callback successCallback, Callback errorCallback) {
         final Socket s = new Socket();
         try {
             s.connect(new InetSocketAddress(host, port), timeOut);
@@ -129,11 +136,12 @@ public class SocketsModule extends ReactContextBaseJavaModule {
         } catch (Exception e) {
             errorCallback.invoke(e.getMessage());
         } finally {
-            if (s != null)
+            if (s != null) {
                 try {
                     s.close();
                 } catch (Exception e) {
                 }
+            }
         }
     }
 
