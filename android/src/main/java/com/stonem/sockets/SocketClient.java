@@ -153,6 +153,7 @@ public class SocketClient {
         if (clientSocket != null) {
             try {
                 clientSocket.close();
+//                clientSocket=null;
             } catch (IOException e) {
                 Log.e(eTag, "Client Destroy IOException", e);
             }
@@ -186,6 +187,7 @@ public class SocketClient {
 
     private boolean connectSocket() {
         try {
+            Log.i("connectSocket", (clientSocket==null)?"null":clientSocket.toString());
             if(clientSocket != null ){
                 onDestroy();
             }
@@ -224,7 +226,7 @@ public class SocketClient {
                     readLen += inputStream.read(buffer, 2, 1);
                     System.out.println("===client==read222======"+readLen+"="+buffer[0]+"="+buffer[1]+"="+buffer[2]);
 //                }else if((buffer[0] == 0x01) && (buffer[1] == 0x02) && ((buffer[2] > 60 && buffer[2] < 80)) && readLen == 3){
-                }else if(( ((buffer[0] == 0x01) && (buffer[1] == 0x02) && ((buffer[2] > 60 && buffer[2] < 80))) || ((buffer[0] == 0x01) && (buffer[1] == 0x01) && (buffer[2] == 0x02)) ) && readLen == 3){
+                }else if(( ((buffer[0] == 0x01) && (buffer[1] == 0x02) && ((buffer[2] > 60 && buffer[2] < 80))) || ((buffer[0] == 0x01) && (buffer[1] == 0x01) && (buffer[2] == 0x02 || buffer[2] == 0x00 || buffer[2] == 0x10)) ) && readLen == 3){
                     readLen += inputStream.read(buffer, 3, 4);
                     System.out.println("===client==read333======"+readLen+"="+buffer[0]+"="+buffer[1]+"="+buffer[2]+"="+buffer[3]+"="+buffer[4]+"="+buffer[5]+"="+buffer[6]);
                 }else{
@@ -243,7 +245,7 @@ public class SocketClient {
                 }else {
 
                     System.out.println("===client==header======" + readLen + "==" + buffer[0] + "=" + buffer[1] + "==" + buffer[2]);
-                    if (((buffer[0] == 0x01) && (buffer[1] == 0x02) && (buffer[2] < 0x4F)) || ((buffer[0] == 0x01) && (buffer[1] == 0x01) && (buffer[2] == 0x02))) {
+                    if (((buffer[0] == 0x01) && (buffer[1] == 0x02) && (buffer[2] < 0x4F)) || ((buffer[0] == 0x01) && (buffer[1] == 0x01) && (buffer[2] == 0x02 || buffer[2] == 0x00 || buffer[2] == 0x10))) {
 
                         dataLen = byteToint(buffer, 3);
                         System.out.println("==Super==dataLen=" + dataLen + "==" + buffer[0] + "=" + buffer[1] + "==" + buffer[2]);
@@ -289,7 +291,7 @@ public class SocketClient {
                                         needDataLen = 0;
                                         break;
                                     }
-                                }else if((receiveData[len] == 0x01) && (receiveData[len + 1] == 0x01) && (receiveData[len + 2] == 0x02)){
+                                }else if((receiveData[len] == 0x01) && (receiveData[len + 1] == 0x01) && (receiveData[len + 2] == 0x02 || receiveData[len + 2] == 0x00 || receiveData[len + 2] == 0x10)){
                                     tmp = byteToint(receiveData, len + 3);
                                     ReSuperData = new byte[7 + tmp + 2];
                                     System.arraycopy(receiveData, len, ReSuperData, 0, ReSuperData.length);
@@ -303,13 +305,14 @@ public class SocketClient {
 //                                        eventParams.putInt("cmd", receiveData[len + 2]);
 //                                        sendEvent(mReactContext, event_data, eventParams);
                                         WritableMap eventParams = Arguments.createMap();
+                                        eventParams.putInt("cmd", receiveData[len + 2]);
                                         sendEvent(mReactContext, event_connect, eventParams);
                                         System.out.println("===SocketREV=login=:==" + reValue + "==len=" + len + "=datalen=" + dataLen + "==readLen=" + readLen);
 
                                         try {
                                             JSONObject jsonObject = new JSONObject();
                                             jsonObject.put("Status", "Success");
-                                            write(jsonObject.toString(), 2);
+                                            write(jsonObject.toString(), receiveData[len + 2]);
                                             break;
                                         }catch(Exception e){
                                             System.out.println("==JSONObject==err="+e.toString());
@@ -367,14 +370,18 @@ public class SocketClient {
         } else {
             sendEvent(mReactContext, event_error, eventParams);
         }
-        if (clientSocket != null) {
-            try {
-                clientSocket.close();
-            } catch (Exception e1) {
-                Log.e(eTag, "Client Exception close", e1);
-            }
-        }
-//        connectSocket();
+//        if (clientSocket != null) {
+//            try {
+//                clientSocket.close();
+//                clientSocket=null;
+//            } catch (Exception e1) {
+//                Log.e(eTag, "Client Exception close", e1);
+//            }
+//        }
+//        if(connectSocket()) {
+//            Thread socketClientThread = new Thread(new SocketClientThread());
+//            socketClientThread.start();
+//        }
     }
 
     private void handleUnknownHostException(UnknownHostException e) {
