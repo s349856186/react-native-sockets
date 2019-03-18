@@ -31,7 +31,7 @@ public class SocketsModule extends ReactContextBaseJavaModule {
 
     SocketServer server;
     SocketClient client;
-
+    ReadableMap reParams=null;
     public SocketsModule(ReactApplicationContext reactContext) {
         super(reactContext);
         mReactContext = reactContext;
@@ -66,6 +66,7 @@ public class SocketsModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void startClient(ReadableMap params) {
         client = new SocketClient(params, mReactContext);
+        reParams=params;
     }
 
     @ReactMethod
@@ -81,6 +82,7 @@ public class SocketsModule extends ReactContextBaseJavaModule {
             client.disconnect(true);
             client = null;
         }
+        System.out.println("===disconnect=="+(client == null)+(reParams != null));
     }
 
     @ReactMethod
@@ -92,6 +94,12 @@ public class SocketsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void clientSent(String message, int cmd) {
+        System.out.println("===clientSent=="+(client == null)+(reParams != null));
+        if(client == null && reParams != null){
+            startClient(reParams);
+            System.out.println("===rePar=="+reParams.toString());
+        }
+
         if (client != null) {
             client.write(message, cmd);
         }
